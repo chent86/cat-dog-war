@@ -52,9 +52,18 @@ bool chooseHero::init()
 
 	hero1->setPosition(Vec2(visibleSize.width / 2 + origin.x + 200, visibleSize.height / 2 + origin.y));
 
-	auto border1 = Sprite::create("border.png");
-	border1->setPosition(Vec2(visibleSize.width / 2 + origin.x + 200, visibleSize.height / 2 + origin.y - 250));
-	this->addChild(border1, 0);
+	//auto border1 = Sprite::create("border.png");
+	//border1->setPosition(Vec2(visibleSize.width / 2 + origin.x + 200, visibleSize.height / 2 + origin.y - 250));
+	//this->addChild(border1, 0);
+
+	auto border1 = MenuItemImage::create(
+		"border.png",
+		"border.png",
+		CC_CALLBACK_1(chooseHero::chooseHeroCallback, this)       //点击英雄图片和英雄名字都会开始游戏
+	);
+	auto first_button = Menu::create(border1, NULL);
+	border1->setPosition(Vec2(border1->getPositionX()+200, border1->getPositionY() - 250));
+	this->addChild(first_button, 0);
 
 	auto hero_1_name = Sprite::create("hero_1_name.png");
 	hero_1_name->setPosition(Vec2(visibleSize.width / 2 + origin.x + 200, visibleSize.height / 2 + origin.y - 250));
@@ -68,9 +77,20 @@ bool chooseHero::init()
 
 	hero2->setPosition(Vec2(visibleSize.width / 2 + origin.x - 200, visibleSize.height / 2 + origin.y));
 
-	auto border2 = Sprite::create("border.png");
-	border2->setPosition(Vec2(visibleSize.width / 2 + origin.x - 200, visibleSize.height / 2 + origin.y - 250));
-	this->addChild(border2, 0);
+
+
+	//auto border2 = Sprite::create("border.png");
+	//border2->setPosition(Vec2(visibleSize.width / 2 + origin.x - 200, visibleSize.height / 2 + origin.y - 250));
+	//this->addChild(border2, 0);
+
+	auto border2 = MenuItemImage::create(
+		"border.png",
+		"border.png",
+		CC_CALLBACK_1(chooseHero::chooseHeroCallback, this)       //点击英雄图片和英雄名字都会开始游戏
+	);
+	auto second_button = Menu::create(border2, NULL);
+	border2->setPosition(Vec2(border2->getPositionX() - 200, border2->getPositionY() - 250));
+	this->addChild(second_button, 0);
 
 	auto hero_2_name = Sprite::create("hero_2_name.png");
 	hero_2_name->setPosition(Vec2(visibleSize.width / 2 + origin.x - 200, visibleSize.height / 2 + origin.y - 250));

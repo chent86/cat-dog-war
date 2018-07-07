@@ -41,18 +41,28 @@ bool MenuScene::init()
 	cat->setPosition(Vec2(visibleSize.width + origin.x - 180, visibleSize.height / 2 + origin.y - 100));
 	this->addChild(cat, 1);
 
-	auto border1 = Sprite::create("border.png");
-	border1->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y - 70));
-	this->addChild(border1, 0);
+	auto border1 = MenuItemImage::create(
+		"border.png",
+		"border.png",
+		CC_CALLBACK_1(MenuScene::startMenuCallback, this)       //点击边框和点击文字都会进行跳转
+	);
+	auto start_button = Menu::create(border1, NULL);
+	border1->setPosition(Vec2(border1->getPositionX(), border1->getPositionY()- 60));
+	this->addChild(start_button, 0);
 
-	auto border2 = Sprite::create("border.png");
-	border2->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y - 160));
-	this->addChild(border2, 0);
+	auto border2 = MenuItemImage::create(
+		"border.png",
+		"border.png",
+		CC_CALLBACK_1(MenuScene::startMenuCallback, this)
+	);
+	auto continue_button = Menu::create(border2, NULL);
+	this->addChild(continue_button, 0);
+	continue_button->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y - 160));
 
 	auto play = Label::createWithTTF("PLAY", "fonts/Marker Felt.ttf", 30);
 	play->setColor(Color3B(0, 0, 0));
 	auto play_item = MenuItemLabel::create(play, CC_CALLBACK_1(MenuScene::startMenuCallback, this));
-	play_item->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y - 70));
+	play_item->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y-60));
 
 	auto con = Label::createWithTTF("CONTINUE", "fonts/Marker Felt.ttf", 30);
 	con->setColor(Color3B(0, 0, 0));

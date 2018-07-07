@@ -54,4 +54,5 @@ private:
 	cocos2d::Label* killnum;
 	cocos2d::Layer* bgLayer;
 	void addKeyboardListener();
+	char last_key;  //上一次水平移动是左还是右，用于对玩家图片的翻转
 };

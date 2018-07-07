@@ -127,6 +127,8 @@ bool HelloWorld::init()
 	bgLayer->addChild(bg);
 	this->addChild(bgLayer, -1);
 
+	this->last_key = 'D';
+
 	return true;
 }
 
@@ -225,6 +227,9 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 //通过update调度器移动player
 void HelloWorld::movePlayer(char c) {
 	if (c == 'A') {
+		if (last_key == 'D')
+			player->setFlipX(true);
+		last_key = 'A';
 		auto bg_x = bgLayer->getPosition().x + 10;
 		auto bg_y = bgLayer->getPosition().y;
 		if (bg_x <= 10 && player->getPosition().x <= visibleSize.width * 0.33){
@@ -241,6 +246,9 @@ void HelloWorld::movePlayer(char c) {
 		}
 	}
 	else if (c == 'D') {
+		if (last_key == 'A')
+			player->setFlipX(false);
+		last_key = 'D';
 		auto bg_x = bgLayer->getPosition().x - 10;
 		auto bg_y = bgLayer->getPosition().y;
 		if (bg_x >= (origin.x - visibleSize.width * 1.85) && player->getPosition().x >= visibleSize.width * 0.33) {
@@ -259,7 +267,7 @@ void HelloWorld::movePlayer(char c) {
 	else if (c == 'W') {
 		auto player_x = player->getPosition().x;
 		auto player_y = player->getPosition().y + 10;
-		if (player_y <= origin.y + visibleSize.height * 0.25) {
+		if (player_y <= origin.y + visibleSize.height * 0.35) {
 			auto moveTo = MoveTo::create(0.2, Vec2(player_x, player_y));
 			player->runAction(moveTo);
 		}
@@ -294,6 +302,8 @@ void HelloWorld::stop() {
 	auto frame = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
 	player = Sprite::createWithSpriteFrame(frame);
 	player->setPosition(Vec2(x, y));
+	if (this->last_key == 'A')
+		player->setFlipX(true);
 	this->addChild(player, 2);
 }
 
@@ -376,10 +386,16 @@ void HelloWorld::Playerrecover() {
 	}
 }
 
-//player收到攻击
+//player受到到攻击
 void HelloWorld::hitByMonster(float data) {
 	if (bool_num) {
-		Sprite* collision = HelloWorld::collider(player->getBoundingBox());
+
+		Rect playerRect = player->getBoundingBox();
+		Rect attackRect = Rect(playerRect.getMinX() + 50, playerRect.getMinY(),
+			playerRect.getMaxX() - playerRect.getMinX() -20,
+			playerRect.getMaxY() - playerRect.getMinY()-100);
+
+		Sprite* collision = HelloWorld::collider(attackRect);
 		if (collision != NULL) {
 			bool_num = 0;
 			isMove = false;
