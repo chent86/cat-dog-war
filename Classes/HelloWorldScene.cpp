@@ -129,6 +129,11 @@ bool HelloWorld::init()
 
 	this->last_key = 'D';
 
+	for (int i = 0; i < 4; i++)
+		group[i] = false;
+
+	m_factory = Factory::getInstance();
+
 	return true;
 }
 
@@ -138,7 +143,37 @@ void HelloWorld::update(float f) {
 		this->movePlayer(movekey);
 		move();
 	}
-	else if (!isMove && !isAttack && !isHurt) stop();
+	else if (!isMove && !isAttack && !isHurt) stop(); 
+// 背景总宽度： 2710
+// 人物默认位于 330:1000 的位置
+	for (int i = 0; i < 4; i++) {
+		auto p = bgLayer->convertToNodeSpace(player->getPosition());
+		//this->killnum->setString(std::to_string(p.x));
+		this->killnum->setString(std::to_string(m_factory->getMonsterNum()));
+		if (p.x > 400*i && p.x < 400*(i + 1) && group[i] == false) {
+			group[i] = true;
+			for (int j = 0; j < 3; j++) {
+				auto m = fac->createMonster();
+				auto moster_y = 50*(j+1);
+				bgLayer->addChild(m);
+				Vec2 Point = bgLayer->convertToNodeSpace(Vec2(400*i+ 700, moster_y));
+				//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
+				m->setPosition(Point);
+			}
+		}
+	}
+	
+	if (m_factory->getMonsterNum() == 0 && group[3] == true) {
+		stop();
+		auto win_cat = Sprite::create("victorycat.png");
+		win_cat->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+		this->addChild(win_cat, 0);
+
+		auto win_word = Sprite::create("victory-hd.png");
+		win_word->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y-100));
+		this->addChild(win_word, 0);
+	}
+
 }
 
 //键盘监听
@@ -324,12 +359,12 @@ void HelloWorld::updateTime(float data) {
 //通过调度器使怪物向player移动
 void HelloWorld::Movetoplayer(float data) {
 	if (bool_num) {
-		auto m = fac->createMonster();
-		auto moster_x = random(origin.x, visibleSize.width);
-		auto moster_y = 100;
-		bgLayer->addChild(m);
-		Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
-		m->setPosition(Point);
+		//auto m = fac->createMonster();
+		//auto moster_x = random(origin.x, visibleSize.width);
+		//auto moster_y = 100;
+		//bgLayer->addChild(m);
+		//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
+		//m->setPosition(Point);
 
 		Vec2 ConvertPoint = player->convertToNodeSpaceAR(bgLayer->getPosition());
 		fac->moveMonster(-ConvertPoint, 1);

@@ -66,6 +66,10 @@ Vector<Sprite*> Factory::getMonster() {
 	return monster;
 }
 
+int Factory::getMonsterNum() {
+	return monster.size();
+}
+
 
 
 

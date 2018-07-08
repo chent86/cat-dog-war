@@ -19,6 +19,8 @@ public:
 	//得到所有的怪物
 	Vector<Sprite*> getMonster();
 	
+	int getMonsterNum();
+
 private:
 	Factory();
 	Vector<Sprite*> monster;

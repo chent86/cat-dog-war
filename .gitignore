@@ -4,6 +4,5 @@ proj.android-studio/
 proj.ios_mac/
 proj.linux/
 proj.win32/
-Resources/
 .cocos-project.json
 CMakeLists.txt

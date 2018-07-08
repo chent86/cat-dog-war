@@ -1,5 +1,6 @@
 #pragma once
 #include "cocos2d.h"
+#include "Monster.h"
 using namespace cocos2d;
 
 class HelloWorld : public cocos2d::Scene
@@ -55,4 +56,6 @@ private:
 	cocos2d::Layer* bgLayer;
 	void addKeyboardListener();
 	char last_key;  //上一次水平移动是左还是右，用于对玩家图片的翻转
+	bool group[4];
+	Factory* m_factory;
 };
