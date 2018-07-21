@@ -8,6 +8,7 @@ class HelloWorld : public cocos2d::Scene
 public:
     static cocos2d::Scene* createScene();
 	void movePlayer(char c);
+	void vertical_movePlayer(char c);
     virtual bool init();
 	void onKeyPressed(EventKeyboard::KeyCode code, Event* event);	
 	void onKeyReleased(EventKeyboard::KeyCode code, Event* event);
@@ -36,6 +37,7 @@ private:
 	cocos2d::Vector<SpriteFrame*> dead;
 	cocos2d::Vector<SpriteFrame*> run;
 	cocos2d::Vector<SpriteFrame*> hurt;
+	cocos2d::Vector<SpriteFrame*> thunder;
 	cocos2d::Size visibleSize;
 	cocos2d::Vec2 origin;
 	cocos2d::Label* time;
@@ -43,7 +45,9 @@ private:
 	Vector<Sprite*> bloods;
 	Vector<Sprite*> magics;
 	char movekey;
+	char vertical_movekey;
 	bool isMove;
+	bool vertical_isMove;
 	int dtime;
 	bool A_press;
 	bool S_press;

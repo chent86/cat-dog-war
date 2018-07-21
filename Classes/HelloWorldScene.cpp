@@ -94,14 +94,24 @@ bool HelloWorld::init()
 	hurt.pushBack(hurt_frame);
 	hurt.pushBack(frame0);
 
+	//闪电动画
+	thunder.reserve(4);
+	for (int i = 1; i <= 4; i++) {
+		char run_pic[25];
+		sprintf(run_pic, "thunder_beam_0%d.png", i);
+		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
+		thunder.pushBack(frame);
+	}
+
 	//计时器
-	time = Label::createWithTTF("120", "fonts/arial.ttf", 36);
+	time = Label::createWithTTF("0", "fonts/arial.ttf", 36);
 	time->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 70));
 	this->addChild(time);
 	schedule(schedule_selector(HelloWorld::updateTime), 1);
-	dtime = 120;
+	dtime = 0;
 
 	//击杀数量
+	database->setIntegerForKey("killNum", 0);
 	attacknum = database->getIntegerForKey("killNum");
 	char str[10];
 	sprintf(str, "%d", attacknum);
@@ -134,22 +144,28 @@ bool HelloWorld::init()
 
 	m_factory = Factory::getInstance();
 
+	isMove = false;
+	vertical_isMove = false;
+
 	return true;
 }
 
 
 void HelloWorld::update(float f) {
-	if (isMove && !isAttack && !isHurt) {
-		this->movePlayer(movekey);
+	if ((vertical_isMove||isMove) && !isAttack && !isHurt) {
+		if (vertical_isMove) {
+			this->vertical_movePlayer(vertical_movekey);
+		}
+		if (isMove) {
+			this->movePlayer(movekey);
+		}
 		move();
 	}
-	else if (!isMove && !isAttack && !isHurt) stop(); 
+	else if (!isMove && !vertical_isMove && !isAttack && !isHurt) stop(); 
 // 背景总宽度： 2710
 // 人物默认位于 330:1000 的位置
 	for (int i = 0; i < 4; i++) {
 		auto p = bgLayer->convertToNodeSpace(player->getPosition());
-		//this->killnum->setString(std::to_string(p.x));
-		this->killnum->setString(std::to_string(m_factory->getMonsterNum()));
 		if (p.x > 400*i && p.x < 400*(i + 1) && group[i] == false) {
 			group[i] = true;
 			for (int j = 0; j < 3; j++) {
@@ -165,6 +181,7 @@ void HelloWorld::update(float f) {
 	
 	if (m_factory->getMonsterNum() == 0 && group[3] == true) {
 		stop();
+		bool_num = 0;
 		auto win_cat = Sprite::create("victorycat.png");
 		win_cat->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
 		this->addChild(win_cat, 0);
@@ -193,16 +210,23 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 		auto attack_animate = Animate::create(attack_animation);
 		player->runAction(attack_animate);
 
+		auto thunder_animation = Animation::createWithSpriteFrames(thunder, 0.1f);
+		auto thunder_animate = Animate::create(thunder_animation);
+		player->runAction(thunder_animate);
+
 		auto delayTime = DelayTime::create(0.4f);
 		auto func = CallFunc::create([this]()
 		{
 			isAttack = 0;
 			bool_num = 1;
 			//判断是否还有按键在
-			if (A_press || D_press || W_press || S_press) {
+			if (A_press || D_press ) {
 				isMove = true;
-				setMovekey();
 			}
+			if (W_press || S_press) {
+				vertical_isMove = true;
+			}
+			setMovekey();
 		});
 		auto seq = Sequence::create(delayTime, func, nullptr);
 		this->runAction(seq);
@@ -261,6 +285,8 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 
 //通过update调度器移动player
 void HelloWorld::movePlayer(char c) {
+	if (!bool_num)
+		return;
 	if (c == 'A') {
 		if (last_key == 'D')
 			player->setFlipX(true);
@@ -299,7 +325,12 @@ void HelloWorld::movePlayer(char c) {
 			}
 		}
 	}
-	else if (c == 'W') {
+}
+
+void HelloWorld::vertical_movePlayer(char c) {
+	if (!bool_num)
+		return;
+	if (c == 'W') {
 		auto player_x = player->getPosition().x;
 		auto player_y = player->getPosition().y + 10;
 		if (player_y <= origin.y + visibleSize.height * 0.35) {
@@ -320,6 +351,8 @@ void HelloWorld::movePlayer(char c) {
 //移动动画，按一下只能执行一次
 int if_move = 1;
 void HelloWorld::move() {
+	if (!bool_num)
+		return;
 	if (if_move) {
 		auto run_animation = Animation::createWithSpriteFrames(run, 0.1f);
 		auto run_animate = RepeatForever::create(Animate::create(run_animation));
@@ -330,6 +363,8 @@ void HelloWorld::move() {
 
 //停止动画，释放键盘调用
 void HelloWorld::stop() {
+	if (!bool_num)
+		return;
 	if_move = 1;
 	auto x = player->getPosition().x;
 	auto y = player->getPosition().y;
@@ -344,8 +379,10 @@ void HelloWorld::stop() {
 
 //计时器
 void HelloWorld::updateTime(float data) {
+	if (!bool_num)
+		return;
 	if (bool_num) {
-		dtime--;
+		dtime++;
 		if (dtime < 0)
 		{
 			dtime = 0;
@@ -434,6 +471,7 @@ void HelloWorld::hitByMonster(float data) {
 		if (collision != NULL) {
 			bool_num = 0;
 			isMove = false;
+			vertical_isMove = false;
 			fac->removeMonster(collision);
 			Playerhurt();
 			//受伤动画
@@ -502,15 +540,15 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 	case EventKeyboard::KeyCode::KEY_CAPITAL_W:
 	case EventKeyboard::KeyCode::KEY_W:
 		W_press = true;
-		movekey = 'W';
-		isMove = true;
+		vertical_movekey = 'W';
+		vertical_isMove = true;
 		break;
 	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_S:
 	case EventKeyboard::KeyCode::KEY_S:
 		S_press = true;
-		movekey = 'S';
-		isMove = true;
+		vertical_movekey = 'S';
+		vertical_isMove = true;
 		break;
 	case EventKeyboard::KeyCode::KEY_J:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_J:
@@ -518,6 +556,7 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 			stop();
 		isAttack = true;
 		isMove = false;
+		vertical_isMove = false;
 		attackCallback(this);
 		break;
 	}
@@ -529,36 +568,45 @@ void HelloWorld::onKeyReleased(EventKeyboard::KeyCode code, Event* event) {
 	case EventKeyboard::KeyCode::KEY_A:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_A:
 		A_press = false;
-		if (!(D_press || S_press || W_press))
+		if (!D_press)
 			isMove = false;
 		else setMovekey();
+		break;
 	case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
 	case EventKeyboard::KeyCode::KEY_D:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_D:
 		D_press = false;
-		if (!(A_press || S_press || W_press))
+		if (!A_press)
 			isMove = false;
 		else setMovekey();
+		break;
 	case EventKeyboard::KeyCode::KEY_UP_ARROW:
 	case EventKeyboard::KeyCode::KEY_W:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_W:
 		W_press = false;
-		if (!(D_press || S_press || A_press))
-			isMove = false;
+		if (!S_press)
+			vertical_isMove = false;
 		else setMovekey();
+		break;
 	case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
 	case EventKeyboard::KeyCode::KEY_S:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_S:
 		S_press = false;
-		if (!(D_press || A_press || W_press))
-			isMove = false;
+		if (!W_press)
+			vertical_isMove = false;
 		else setMovekey();
+		break;
 	}
 }
 
 void HelloWorld::setMovekey() {
-	if (A_press) movekey = 'A';
-	else if (D_press) movekey = 'D';
-	else if (S_press) movekey = 'S';
-	else if (W_press) movekey = 'W';
+	if (A_press) 
+		movekey = 'A';
+	else if (D_press) 
+		movekey = 'D';
+
+	if (S_press) 
+		vertical_movekey = 'S';
+	else if (W_press) 
+		vertical_movekey = 'W';
 }
