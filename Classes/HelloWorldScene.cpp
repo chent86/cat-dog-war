@@ -413,7 +413,12 @@ void HelloWorld::Movetoplayer(float data) {
 		//bgLayer->addChild(m);
 		//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
 		//m->setPosition(Point);
-
+		for (auto i : fac->getMonster()) {
+			if (this->bgLayer->convertToWorldSpace(i->getPosition()).x < player->getPositionX())
+				i->setFlipX(true);
+			else
+				i->setFlipX(false);
+		}
 		Vec2 ConvertPoint = player->convertToNodeSpaceAR(bgLayer->getPosition());
 		fac->moveMonster(-ConvertPoint, 1);
 	}
