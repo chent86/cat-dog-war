@@ -22,6 +22,7 @@ public:
 	void Movetoplayer(float data);
 	void Playerhurt();
 	void hitByMonster(float data);
+	void getDrug(float data);
 	void Playerrecover();    
 	void move();
 	void stop();
@@ -29,6 +30,7 @@ public:
 	void update(float f);
 	Sprite* collider(Rect rect);
 	void setMovekey();
+	void thunder_skill();
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
 private:
@@ -41,6 +43,7 @@ private:
 	cocos2d::Size visibleSize;
 	cocos2d::Vec2 origin;
 	cocos2d::Label* time;
+	cocos2d::Label* magic_label;
 	cocos2d::Sprite* bg;
 	Vector<Sprite*> bloods;
 	Vector<Sprite*> magics;
@@ -49,6 +52,7 @@ private:
 	bool isMove;
 	bool vertical_isMove;
 	int dtime;
+	int magic_num;
 	bool A_press;
 	bool S_press;
 	bool D_press;

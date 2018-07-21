@@ -38,6 +38,14 @@ bool HelloWorld::init()
 	Sprite* sp0 = Sprite::create("hp.png", CC_RECT_PIXELS_TO_POINTS(Rect(0, 320, 420, 47)));
 	Sprite* sp = Sprite::create("hp.png", CC_RECT_PIXELS_TO_POINTS(Rect(610, 362, 4, 16)));
 
+	//mp次数
+	auto magic = Sprite::create("magic.png");
+	magic->setPosition(Vec2(30, this->visibleSize.height-70));
+	this->addChild(magic,1);
+	magic_label = Label::createWithTTF("1", "fonts/arial.ttf", 36);
+	magic_label->setPosition(Vec2(70, this->visibleSize.height - 70));
+	this->addChild(magic_label);
+
 	//使用hp条设置progressBar
 	pT = ProgressTimer::create(sp);
 	pT->setScaleX(90);
@@ -51,6 +59,10 @@ bool HelloWorld::init()
 	sp0->setAnchorPoint(Vec2(0, 0));
 	sp0->setPosition(Vec2(origin.x + pT->getContentSize().width, origin.y + visibleSize.height - sp0->getContentSize().height));
 	addChild(sp0, 0);
+
+
+
+
 
 	auto frame0 = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
 
@@ -122,6 +134,7 @@ bool HelloWorld::init()
 	//调度器
 	schedule(schedule_selector(HelloWorld::Movetoplayer), 3);
 	schedule(schedule_selector(HelloWorld::hitByMonster), 0.5);
+	schedule(schedule_selector(HelloWorld::getDrug), 0.5);
 	schedule(schedule_selector(HelloWorld::update), 0.05);
 
 	addKeyboardListener();
@@ -146,6 +159,8 @@ bool HelloWorld::init()
 
 	isMove = false;
 	vertical_isMove = false;
+
+	magic_num = 1;
 
 	return true;
 }
@@ -209,10 +224,6 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 		auto attack_animation = Animation::createWithSpriteFrames(attack, 0.1f);
 		auto attack_animate = Animate::create(attack_animation);
 		player->runAction(attack_animate);
-
-		auto thunder_animation = Animation::createWithSpriteFrames(thunder, 0.1f);
-		auto thunder_animate = Animate::create(thunder_animation);
-		player->runAction(thunder_animate);
 
 		auto delayTime = DelayTime::create(0.4f);
 		auto func = CallFunc::create([this]()
@@ -461,7 +472,6 @@ void HelloWorld::Playerrecover() {
 //player受到到攻击
 void HelloWorld::hitByMonster(float data) {
 	if (bool_num) {
-
 		Rect playerRect = player->getBoundingBox();
 		Rect attackRect = Rect(playerRect.getMinX() + 50, playerRect.getMinY(),
 			playerRect.getMaxX() - playerRect.getMinX() -20,
@@ -493,6 +503,34 @@ void HelloWorld::hitByMonster(float data) {
 	}
 }
 
+void HelloWorld::getDrug(float data) {
+	if (bool_num) {
+		Rect playerRect = player->getBoundingBox();
+		Sprite* m_drug;
+		for (auto i : bloods) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				this->bgLayer->removeChild(i);
+				bloods.eraseObject(i);
+				Playerrecover();
+				break;
+			}
+		}
+		for (auto i : magics) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				this->bgLayer->removeChild(i);
+				magics.eraseObject(i);
+				magic_num++;
+				char str[10];
+				sprintf(str, "%d", magic_num);
+				magic_label->setString(str);
+				break;
+			}
+		}
+	}
+}
+
 //死亡
 void HelloWorld::ifdead() {
 	auto tag = pT->getPercentage();
@@ -518,6 +556,70 @@ Sprite* HelloWorld::collider(Rect rect) {
 		}
 	}
 	return NULL;
+}
+
+void HelloWorld::thunder_skill() {
+	if (magic_num <= 0)
+		return;
+	magic_num--;
+	char str[10];
+	sprintf(str, "%d", magic_num);
+	magic_label->setString(str);
+	for (auto i : fac->getMonster()) {
+		Vec2 ConvertPoint = i->getPosition();
+		ConvertPoint.y += 180;
+		auto thunder_sprite = Sprite::create("thunder_beam_01.png");
+		thunder_sprite->setPosition(ConvertPoint);
+		this->bgLayer->addChild(thunder_sprite, 0);
+		auto thunder_animation = Animation::createWithSpriteFrames(thunder, 0.1f);
+		auto thunder_animate = Animate::create(thunder_animation);
+		thunder_sprite->runAction(thunder_animate);
+		auto delayTime = DelayTime::create(0.5f);
+		auto func = CallFunc::create([this, thunder_sprite,i]()
+		{
+			int x = i->getPosition().x;
+			int y = i->getPosition().y;
+			this->bgLayer->removeChild(thunder_sprite);
+			//怪物动作结束后掉血瓶
+			auto delayTime = DelayTime::create(0.8f);
+			auto func = CallFunc::create([this, x, y]()
+			{
+				int ran = random(1, 2);
+				if (ran == 1) {
+					auto blood = Sprite::create("blood.png");
+					blood->setPosition(Vec2(x, y + 15));
+					bloods.pushBack(blood);
+					blood->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+					bgLayer->addChild(blood);
+				}
+				else if (ran == 2) {
+					auto magic = Sprite::create("magic.png");
+					magic->setPosition(Vec2(x, y + 15));
+					magics.pushBack(magic);
+					magic->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+					bgLayer->addChild(magic);
+				}
+			});
+			auto seq = Sequence::create(delayTime, func, nullptr);
+			this->runAction(seq);
+
+			//移除怪物
+			fac->removeMonster(i);
+
+			//增加击杀数并显示
+			attacknum++;
+			database->setIntegerForKey("killNum", attacknum);
+			database->flush();
+			int i = database->getIntegerForKey("killNum");
+			log("%d", i);
+
+			char str[10];
+			sprintf(str, "%d", i);
+			killnum->setString(str);
+		});
+		auto seq = Sequence::create(delayTime, func, nullptr);
+		this->runAction(seq);
+	}
 }
 
 void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
@@ -550,6 +652,8 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 		vertical_movekey = 'S';
 		vertical_isMove = true;
 		break;
+	case EventKeyboard::KeyCode::KEY_Z:
+	case EventKeyboard::KeyCode::KEY_CAPITAL_Z:
 	case EventKeyboard::KeyCode::KEY_J:
 	case EventKeyboard::KeyCode::KEY_CAPITAL_J:
 		if (bool_num) 
@@ -558,6 +662,12 @@ void HelloWorld::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 		isMove = false;
 		vertical_isMove = false;
 		attackCallback(this);
+		break;
+	case EventKeyboard::KeyCode::KEY_X:
+	case EventKeyboard::KeyCode::KEY_CAPITAL_X:
+	case EventKeyboard::KeyCode::KEY_K:
+	case EventKeyboard::KeyCode::KEY_CAPITAL_K:
+		thunder_skill();
 		break;
 	}
 }
