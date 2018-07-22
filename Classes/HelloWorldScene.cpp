@@ -1,6 +1,7 @@
 #include "HelloWorldScene.h"
 #include "SimpleAudioEngine.h"
 #include "Monster.h"
+#include "MenuScene.h"
 #pragma execution_character_set("utf-8")
 #define database UserDefault::getInstance()
 #define fac Factory::getInstance()
@@ -182,9 +183,24 @@ bool HelloWorld::init()
 
 	magic_num = 1;
 
+	auto back = Label::createWithTTF("BACK", "fonts/Marker Felt.ttf", 30);
+	back->setColor(Color3B(255, 255, 255));
+	auto back_item = MenuItemLabel::create(back, CC_CALLBACK_1(HelloWorld::quit, this));
+	back_item->setPosition(Vec2(visibleSize.width - 50, visibleSize.height - 30));
+	
+	auto menu = Menu::create(back_item, NULL);
+	menu->setAnchorPoint(Vec2::ZERO);
+	menu->setPosition(Vec2::ZERO);
+	this->addChild(menu);
+
 	return true;
 }
 
+void HelloWorld::quit(cocos2d::Ref* pSender) {
+	auto scene = MenuScene::createScene();
+	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+	
+}
 
 void HelloWorld::update(float f) {
 	if ((vertical_isMove||isMove) && !isAttack && !isHurt) {

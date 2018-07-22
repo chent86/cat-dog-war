@@ -1,13 +1,24 @@
 #include "HelloWorldScene2.h"
 #include "SimpleAudioEngine.h"
 #include "Monster.h"
+#include "MenuScene.h"
 #pragma execution_character_set("utf-8")
 #define database UserDefault::getInstance()
 #define fac Factory::getInstance()
 USING_NS_CC;
 
+
+void HelloWorld2::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
+
 Scene* HelloWorld2::createScene() {
-    return HelloWorld2::create();
+	auto scene = Scene::createWithPhysics();
+
+	scene->getPhysicsWorld()->setAutoStep(true);
+	scene->getPhysicsWorld()->setGravity(Vec2(0, -300.0f));
+	auto layer = HelloWorld2::create();
+	layer->setPhysicsWorld(scene->getPhysicsWorld());
+	scene->addChild(layer);
+	return scene;
 }
 
 // Print useful error message instead of segfaulting when files are not there.
@@ -35,6 +46,14 @@ bool HelloWorld2::init() {
     //hp条
     Sprite* sp0 = Sprite::create("hp.png", CC_RECT_PIXELS_TO_POINTS(Rect(0, 320, 420, 47)));
     Sprite* sp = Sprite::create("hp.png", CC_RECT_PIXELS_TO_POINTS(Rect(610, 362, 4, 16)));
+
+	//mp次数
+	auto magic = Sprite::create("magic.png");
+	magic->setPosition(Vec2(30, this->visibleSize.height - 70));
+	this->addChild(magic, 1);
+	magic_label = Label::createWithTTF("1", "fonts/arial.ttf", 36);
+	magic_label->setPosition(Vec2(70, this->visibleSize.height - 70));
+	this->addChild(magic_label);
 
     //使用hp条设置progressBar
     pT = ProgressTimer::create(sp);
@@ -102,6 +121,15 @@ bool HelloWorld2::init() {
     hurt.pushBack(hurt_frame);
     hurt.pushBack(frame0);
 
+	//地雷动画
+	mine.reserve(3);
+	for (int i = 1; i <= 4; i++) {
+		char run_pic[25];
+		sprintf(run_pic, "explo_03_0%d.png", i);
+		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
+		mine.pushBack(frame);
+	}
+
     //计时器
     time = Label::createWithTTF("0", "fonts/arial.ttf", 36);
     time->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 70));
@@ -122,6 +150,8 @@ bool HelloWorld2::init() {
     schedule(schedule_selector(HelloWorld2::Movetoplayer), 3);
     schedule(schedule_selector(HelloWorld2::hitByMonster), 0.5);
     schedule(schedule_selector(HelloWorld2::update), 0.05);
+	schedule(schedule_selector(HelloWorld2::getDrug), 0.5);
+	schedule(schedule_selector(HelloWorld2::getBomb), 0.5);
 
     addKeyboardListener();
 
@@ -138,17 +168,36 @@ bool HelloWorld2::init() {
 
     this->last_key = 'D';
 
-    for (int i = 0; i < 4; i++)
-        group[i] = false;
+	for (int i = 0; i < 4; i++) {
+		group[i] = false;
+		monster_bomb[i] = 3;
+	}
 
     m_factory = Factory::getInstance();
 
     isMove = false;
     vertical_isMove = false;
 
+	magic_num = 1;
+
+	auto back = Label::createWithTTF("BACK", "fonts/Marker Felt.ttf", 30);
+	back->setColor(Color3B(255, 255, 255));
+	auto back_item = MenuItemLabel::create(back, CC_CALLBACK_1(HelloWorld2::quit, this));
+	back_item->setPosition(Vec2(visibleSize.width - 50, visibleSize.height - 30));
+
+	auto menu = Menu::create(back_item, NULL);
+	menu->setAnchorPoint(Vec2::ZERO);
+	menu->setPosition(Vec2::ZERO);
+	this->addChild(menu);
+
     return true;
 }
 
+void HelloWorld2::quit(cocos2d::Ref* pSender) {
+	auto scene = MenuScene::createScene();
+	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+
+}
 
 void HelloWorld2::update(float f) {
     if ((vertical_isMove || isMove) && !isAttack && !isHurt) {
@@ -172,11 +221,23 @@ void HelloWorld2::update(float f) {
                 auto moster_y = 50 * (j + 1);
                 bgLayer->addChild(m);
                 Vec2 Point = bgLayer->convertToNodeSpace(Vec2(400 * i + 700, moster_y));
-                //Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
                 m->setPosition(Point);
+				m->setTag(i);
             }
         }
     }
+
+	for (auto i : fac->getMonster()) {
+		if (this->bgLayer->convertToWorldSpace(i->getPosition()).x - this->player->getPosition().x < 600) {
+			if (monster_bomb[i->getTag()] > 0) {
+				monster_bomb[i->getTag()]--;
+				if (i->getTag() == 0)
+					throwBomb(i, 1.9f);   //未知bug，第一波兵扔的炸弹高一点，所以要落久一点
+				else
+					throwBomb(i, 1.4f);
+			}
+		}
+	}
 
     if (m_factory->getMonsterNum() == 0 && group[3] == true) {
         stop();
@@ -264,10 +325,53 @@ void HelloWorld2::meet() {
     for (auto bullet : bullets) {
         for (auto enemy : enemys) {
             if (bullet->getPosition().getDistance(enemy->getPosition()) <= 30) {
-                this->m_factory->removeMonster(enemy);
-                bullet->stopAllActions();
-                this->bgLayer->removeChild(bullet);
-                this->bullets.remove(bullet);
+				auto delayTime = DelayTime::create(0.5f);
+				auto func = CallFunc::create([this, enemy,bullet]()
+				{
+					int x = enemy->getPosition().x;
+					int y = enemy->getPosition().y;
+					//怪物动作结束后掉血瓶
+					auto delayTime = DelayTime::create(0.8f);
+					auto func = CallFunc::create([this, x, y]()
+					{
+						int ran = random(1, 2);
+						if (ran == 1) {
+							auto blood = Sprite::create("blood.png");
+							blood->setPosition(Vec2(x, y + 15));
+							bloods.pushBack(blood);
+							blood->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+							bgLayer->addChild(blood);
+						}
+						else if (ran == 2) {
+							auto magic = Sprite::create("magic.png");
+							magic->setPosition(Vec2(x, y + 15));
+							magics.pushBack(magic);
+							magic->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+							bgLayer->addChild(magic);
+						}
+					});
+					auto seq = Sequence::create(delayTime, func, nullptr);
+					this->runAction(seq);
+
+					//移除怪物
+					fac->removeMonster(enemy);
+					//移除子弹
+					bullet->stopAllActions();
+					this->bgLayer->removeChild(bullet);
+					this->bullets.remove(bullet);
+					//增加击杀数并显示
+					attacknum++;
+					database->setIntegerForKey("killNum", attacknum);
+					database->flush();
+					int i = database->getIntegerForKey("killNum");
+					log("%d", i);
+
+					char str[10];
+					sprintf(str, "%d", i);
+					killnum->setString(str);
+				});
+				auto seq = Sequence::create(delayTime, func, nullptr);
+				this->runAction(seq);
                 break;
             }
         }
@@ -292,7 +396,50 @@ void HelloWorld2::meet() {
         if (shock_wave != nullptr) {
             for (auto enemy : enemys) {
                 if (shock_wave->getPosition().getDistance(enemy->getPosition()) <= 40) {
-                    this->m_factory->removeMonster(enemy);
+					auto delayTime = DelayTime::create(0.5f);
+					auto func = CallFunc::create([this, enemy]()
+					{
+						int x = enemy->getPosition().x;
+						int y = enemy->getPosition().y;
+						//怪物动作结束后掉血瓶
+						auto delayTime = DelayTime::create(0.8f);
+						auto func = CallFunc::create([this, x, y]()
+						{
+							int ran = random(1, 2);
+							if (ran == 1) {
+								auto blood = Sprite::create("blood.png");
+								blood->setPosition(Vec2(x, y + 15));
+								bloods.pushBack(blood);
+								blood->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+								bgLayer->addChild(blood);
+							}
+							else if (ran == 2) {
+								auto magic = Sprite::create("magic.png");
+								magic->setPosition(Vec2(x, y + 15));
+								magics.pushBack(magic);
+								magic->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+								bgLayer->addChild(magic);
+							}
+						});
+						auto seq = Sequence::create(delayTime, func, nullptr);
+						this->runAction(seq);
+
+						//移除怪物
+						fac->removeMonster(enemy);
+
+						//增加击杀数并显示
+						attacknum++;
+						database->setIntegerForKey("killNum", attacknum);
+						database->flush();
+						int i = database->getIntegerForKey("killNum");
+						log("%d", i);
+
+						char str[10];
+						sprintf(str, "%d", i);
+						killnum->setString(str);
+					});
+					auto seq = Sequence::create(delayTime, func, nullptr);
+					this->runAction(seq);
                 }
             }
         }
@@ -410,66 +557,39 @@ void HelloWorld2::updateTime(float data) {
 //通过调度器使怪物向player移动
 void HelloWorld2::Movetoplayer(float data) {
     if (bool_num) {
-        //auto m = fac->createMonster();
-        //auto moster_x = random(origin.x, visibleSize.width);
-        //auto moster_y = 100;
-        //bgLayer->addChild(m);
-        //Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
-        //m->setPosition(Point);
-
-        Vec2 ConvertPoint = player->convertToNodeSpaceAR(bgLayer->getPosition());
-        fac->moveMonster(-ConvertPoint, 1);
+		//auto m = fac->createMonster();
+		//auto moster_x = random(origin.x, visibleSize.width);
+		//auto moster_y = 100;
+		//bgLayer->addChild(m);
+		//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
+		//m->setPosition(Point);
+		for (auto i : fac->getMonster()) {
+			if (this->bgLayer->convertToWorldSpace(i->getPosition()).x < player->getPositionX())
+				i->setFlipX(true);
+			else
+				i->setFlipX(false);
+		}
+		Vec2 ConvertPoint = player->convertToNodeSpaceAR(bgLayer->getPosition());
+		fac->moveMonster(-ConvertPoint, 1);
     }
 }
 
 //player受伤
 void HelloWorld2::Playerhurt() {
-    auto tag = pT->getPercentage();
-    if (tag == 100) {
-        auto progressTo = ProgressTo::create(2, 80);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 80) {
-        auto progressTo = ProgressTo::create(2, 60);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 60) {
-        auto progressTo = ProgressTo::create(2, 40);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 40) {
-        auto progressTo = ProgressTo::create(2, 20);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 20) {
-        auto progressTo = ProgressTo::create(2, 0);
-        pT->runAction(progressTo);
-    }
+	auto tag = pT->getPercentage();
+	tag -= 20;
+	auto progressTo = ProgressTo::create(2, tag);
+	pT->runAction(progressTo);
 }
 
 //player恢复
 void HelloWorld2::Playerrecover() {
-    auto tag = pT->getPercentage();
-    if (tag == 0) {
-        auto progressTo = ProgressTo::create(2, 20);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 80) {
-        auto progressTo = ProgressTo::create(2, 100);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 60) {
-        auto progressTo = ProgressTo::create(2, 80);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 40) {
-        auto progressTo = ProgressTo::create(2, 60);
-        pT->runAction(progressTo);
-    }
-    else if (tag == 20) {
-        auto progressTo = ProgressTo::create(2, 40);
-        pT->runAction(progressTo);
-    }
+	auto tag = pT->getPercentage();
+	tag += 20;
+	if (tag > 100)
+		tag = 100;
+	auto progressTo = ProgressTo::create(2, tag);
+	pT->runAction(progressTo);
 }
 
 //player受到到攻击
@@ -507,6 +627,71 @@ void HelloWorld2::hitByMonster(float data) {
     }
 }
 
+void HelloWorld2::getDrug(float data) {
+	if (bool_num) {
+		Rect playerRect = player->getBoundingBox();
+		for (auto i : bloods) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				this->bgLayer->removeChild(i);
+				bloods.eraseObject(i);
+				Playerrecover();
+				break;
+			}
+		}
+		for (auto i : magics) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				this->bgLayer->removeChild(i);
+				magics.eraseObject(i);
+				magic_num++;
+				char str[10];
+				sprintf(str, "%d", magic_num);
+				magic_label->setString(str);
+				break;
+			}
+		}
+	}
+}
+
+void HelloWorld2::getBomb(float data) {
+	if (bool_num) {
+		Rect playerRect = player->getBoundingBox();
+		for (auto i : bombs) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				auto mine_animation = Animation::createWithSpriteFrames(mine, 0.1f);
+				auto mine_animate = Animate::create(mine_animation);
+				i->runAction(mine_animate);
+				auto delayTime = DelayTime::create(0.4f);
+				auto func = CallFunc::create([this, i]()
+				{
+					bombs.eraseObject(i);
+					this->bgLayer->removeChild(i);
+					Playerhurt();
+					//受伤动画
+					auto hurt_animation = Animation::createWithSpriteFrames(hurt, 0.5f);
+					auto hurt_animate = Animate::create(hurt_animation);
+					player->runAction(hurt_animate);
+					isHurt = true;
+
+					auto delayTime = DelayTime::create(1.0f);
+					auto func = CallFunc::create([this]()
+					{
+						isHurt = false;
+						bool_num = 1;
+					});
+					auto seq = Sequence::create(delayTime, func, nullptr);
+					this->runAction(seq);
+				});
+				auto seq = Sequence::create(delayTime, func, nullptr);
+				this->runAction(seq);
+				break;
+			}
+		}
+	}
+}
+
 //死亡
 void HelloWorld2::ifdead() {
     auto tag = pT->getPercentage();
@@ -534,6 +719,27 @@ Sprite* HelloWorld2::collider(Rect rect) {
     return NULL;
 }
 
+void HelloWorld2::throwBomb(Sprite* m, float time) {
+	auto bomb_sprite = Sprite::create("bomb.png");
+	bomb_sprite->setPosition(m->getPosition());
+	auto bomb_body = PhysicsBody::createCircle(bomb_sprite->getContentSize().width / 2, PhysicsMaterial(1, 1, 0));
+	bomb_body->setGravityEnable(true);
+	bomb_body->setCollisionBitmask(0x00);
+	bomb_sprite->setPhysicsBody(bomb_body);
+	this->bgLayer->addChild(bomb_sprite, 0);
+	bomb_sprite->getPhysicsBody()->setVelocity(Vec2(-200, 200));
+	bombs.pushBack(bomb_sprite);
+	auto delayTime = DelayTime::create(time);
+	auto func = CallFunc::create([this, bomb_sprite, bomb_body]()
+	{
+		if (bombs.getIndex(bomb_sprite) >= 0) {
+			bomb_body->setGravityEnable(false);
+			bomb_body->setVelocity(Vec2(0, 0));
+		}
+	});
+	auto seq = Sequence::create(delayTime, func, nullptr);
+	this->runAction(seq);
+}
 
 void HelloWorld2::shock_wave_skill(cocos2d::Ref* pSender) {
     //if (magic_num <= 0)
@@ -544,6 +750,12 @@ void HelloWorld2::shock_wave_skill(cocos2d::Ref* pSender) {
     //magic_label->setString(str);
 
     // 不能同时存在多个冲击波
+	if (magic_num <= 0)
+		return;
+	magic_num--;
+	char str[10];
+	sprintf(str, "%d", magic_num);
+	magic_label->setString(str);
     if (shock_wave != nullptr)
         return;
     auto attack_animation = Animation::createWithSpriteFrames(skill, 0.1f);

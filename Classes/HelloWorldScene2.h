@@ -29,9 +29,14 @@ public:
     void farfire();
     void meet();
     void update(float f);
+	void quit(cocos2d::Ref* pSender);
     void shock_wave_skill(cocos2d::Ref* pSender);
     Sprite* collider(Rect rect);
     void setMovekey();
+	void setPhysicsWorld(PhysicsWorld* world);
+	void getDrug(float data);
+	void getBomb(float data);
+	void throwBomb(Sprite* m, float time);
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld2);
 private:
@@ -46,9 +51,11 @@ private:
     cocos2d::Size visibleSize;
     cocos2d::Vec2 origin;
     cocos2d::Label* time;
+	cocos2d::Label* magic_label;
     cocos2d::Sprite* bg;
     Vector<Sprite*> bloods;
     Vector<Sprite*> magics;
+	Vector<Sprite*> bombs;
     char movekey;
     char vertical_movekey;
     bool isMove;
@@ -66,8 +73,12 @@ private:
     void addKeyboardListener();
     char last_key;  //上一次水平移动是左还是右，用于对玩家图片的翻转
     bool group[4];
+	int monster_bomb[4];
     Factory* m_factory;
     boolean bool_num;
     int attacknum;
     int if_move;
+	int magic_num;
+	PhysicsWorld* m_world;
+	cocos2d::Vector<SpriteFrame*> mine;
 };
