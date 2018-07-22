@@ -130,21 +130,29 @@ bool HelloWorld2::init() {
 		mine.pushBack(frame);
 	}
 
+    auto killnum_label = Label::createWithTTF("SCORE: ", "fonts/arial.ttf", 36);
+    killnum_label->setPosition(Vec2(origin.x + visibleSize.width / 2 - 80, origin.y + visibleSize.height - 70));
+    this->addChild(killnum_label, 2);
+
+    auto time_label = Label::createWithTTF("TIME: ", "fonts/arial.ttf", 36);
+    time_label->setPosition(Vec2(origin.x + visibleSize.width / 2 - 80, origin.y + visibleSize.height - 120));
+    this->addChild(time_label, 2);
+
     //计时器
     time = Label::createWithTTF("0", "fonts/arial.ttf", 36);
-    time->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 70));
+    time->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 120));
     this->addChild(time);
     schedule(schedule_selector(HelloWorld2::updateTime), 1);
     dtime = 0;
 
     //击杀数量
-	if (database->getIntegerForKey("continue") == 0)
-		database->setIntegerForKey("killNum", 0);
+    if (database->getIntegerForKey("continue") == 0)
+        database->setIntegerForKey("killNum", 0);
     attacknum = database->getIntegerForKey("killNum");
     char str[10];
     sprintf(str, "%d", attacknum);
     killnum = Label::createWithTTF(str, "fonts/arial.ttf", 36);
-    killnum->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 30));
+    killnum->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 70));
     this->addChild(killnum);
 
     //调度器
