@@ -1,7 +1,9 @@
 #include "MenuScene.h"
 #include "SimpleAudioEngine.h"
 #include "chooseHero.h"
-
+#include "HelloWorldScene.h"
+#include "HelloWorldScene2.h"
+#define database UserDefault::getInstance()
 USING_NS_CC;
 
 Scene* MenuScene::createScene()
@@ -25,7 +27,12 @@ bool MenuScene::init()
     {
         return false;
     }
-
+	if(database->getIntegerForKey("continue") == NULL)
+		database->setIntegerForKey("continue", 0);
+	if (database->getIntegerForKey("role") == NULL)
+		database->setIntegerForKey("role", 0);
+	if (database->getIntegerForKey("killNum") == NULL)
+		database->setIntegerForKey("killNum", 0);
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
@@ -66,7 +73,7 @@ bool MenuScene::init()
 
 	auto con = Label::createWithTTF("CONTINUE", "fonts/Marker Felt.ttf", 30);
 	con->setColor(Color3B(0, 0, 0));
-	auto continue_item = MenuItemLabel::create(con, CC_CALLBACK_1(MenuScene::startMenuCallback, this));
+	auto continue_item = MenuItemLabel::create(con, CC_CALLBACK_1(MenuScene::continueMenuCallback, this));
 	continue_item->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 + origin.y - 160));
 
 
@@ -89,7 +96,20 @@ bool MenuScene::init()
 }
 
 void MenuScene::startMenuCallback(cocos2d::Ref* pSender) {
+	database->setIntegerForKey("continue", 0);
 	auto scene = chooseHero::createScene();
 	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+}
+
+void MenuScene::continueMenuCallback(cocos2d::Ref* pSender) {
+	database->setIntegerForKey("continue", 1);
+	if (database->getIntegerForKey("role") == 0 || database->getIntegerForKey("role") == NULL) {
+		auto scene = HelloWorld::createScene();
+		Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+	}
+	else if (database->getIntegerForKey("role") == 1) {
+		auto scene = HelloWorld2::createScene();
+		Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+	}
 }
 
