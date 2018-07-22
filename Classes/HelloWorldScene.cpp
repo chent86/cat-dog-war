@@ -126,7 +126,7 @@ bool HelloWorld::init()
 
 	//地雷动画
 	mine.reserve(3);
-	for (int i = 1; i <= 4; i++) {
+	for (int i = 1; i <= 3; i++) {
 		char run_pic[25];
 		sprintf(run_pic, "explo_03_0%d.png", i);
 		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
@@ -306,7 +306,7 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 			auto delayTime = DelayTime::create(0.8f);
 			auto func = CallFunc::create([this, x, y]()
 			{
-				int ran = random(1, 2);
+				int ran = random(1, 4);
 				if (ran == 1) {
 					auto blood = Sprite::create("blood.png");
 					blood->setPosition(Vec2(x, y + 15));
@@ -456,12 +456,6 @@ void HelloWorld::updateTime(float data) {
 //通过调度器使怪物向player移动
 void HelloWorld::Movetoplayer(float data) {
 	if (bool_num) {
-		//auto m = fac->createMonster();
-		//auto moster_x = random(origin.x, visibleSize.width);
-		//auto moster_y = 100;
-		//bgLayer->addChild(m);
-		//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
-		//m->setPosition(Point);
 		for (auto i : fac->getMonster()) {
 			if (this->bgLayer->convertToWorldSpace(i->getPosition()).x < player->getPositionX())
 				i->setFlipX(true);
@@ -479,26 +473,6 @@ void HelloWorld::Playerhurt() {
 	tag -= 20;
 	auto progressTo = ProgressTo::create(2, tag);
 	pT->runAction(progressTo);
-	//if (tag == 100) {
-	//	auto progressTo = ProgressTo::create(2, 80);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 80) {
-	//	auto progressTo = ProgressTo::create(2, 60);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 60) {
-	//	auto progressTo = ProgressTo::create(2, 40);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 40) {
-	//	auto progressTo = ProgressTo::create(2, 20);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 20) {
-	//	auto progressTo = ProgressTo::create(2, 0);
-	//	pT->runAction(progressTo);
-	//}
 }
 
 //player恢复
@@ -509,26 +483,6 @@ void HelloWorld::Playerrecover() {
 		tag = 100;
 	auto progressTo = ProgressTo::create(2, tag);
 	pT->runAction(progressTo);
-	//if (tag == 0) {
-	//	auto progressTo = ProgressTo::create(2, 20);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 80) {
-	//	auto progressTo = ProgressTo::create(2, 100);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 60) {
-	//	auto progressTo = ProgressTo::create(2, 80);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 40) {
-	//	auto progressTo = ProgressTo::create(2, 60);
-	//	pT->runAction(progressTo);
-	//}
-	//else if (tag == 20) {
-	//	auto progressTo = ProgressTo::create(2, 40);
-	//	pT->runAction(progressTo);
-	//}
 }
 
 //player受到到攻击
@@ -613,7 +567,7 @@ void HelloWorld::getBomb(float data) {
 					player->runAction(hurt_animate);
 					isHurt = true;
 
-					auto delayTime = DelayTime::create(1.0f);
+					auto delayTime = DelayTime::create(0.3f);
 					auto func = CallFunc::create([this]()
 					{
 						isHurt = false;
@@ -705,7 +659,7 @@ void HelloWorld::thunder_skill() {
 			auto delayTime = DelayTime::create(0.8f);
 			auto func = CallFunc::create([this, x, y]()
 			{
-				int ran = random(1, 2);
+				int ran = random(1, 4);
 				if (ran == 1) {
 					auto blood = Sprite::create("blood.png");
 					blood->setPosition(Vec2(x, y + 15));

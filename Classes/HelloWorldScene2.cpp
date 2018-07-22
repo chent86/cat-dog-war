@@ -318,6 +318,7 @@ void HelloWorld2::meet() {
         if (x < 0 || x > visibleSize.width) {
             bgLayer->removeChild(bullet);
             this->bullets.remove(bullet);
+            break;
         }
     }
 
@@ -668,7 +669,7 @@ void HelloWorld2::getBomb(float data) {
 					player->runAction(hurt_animate);
 					isHurt = true;
 
-					auto delayTime = DelayTime::create(1.0f);
+					auto delayTime = DelayTime::create(0.3f);
 					auto func = CallFunc::create([this]()
 					{
 						isHurt = false;
@@ -736,8 +737,17 @@ void HelloWorld2::throwBomb(Sprite* m, float time) {
 
 void HelloWorld2::shock_wave_skill(cocos2d::Ref* pSender) {
     // 不能同时存在多个冲击波
-	if (!bool_num||magic_num <= 0 || shock_wave != nullptr)
-		return;
+    if (!bool_num || magic_num <= 0 || shock_wave != nullptr) {
+        isAttack = false;
+        //判断是否还有按键在
+        if (A_press || D_press) {
+            isMove = true;
+        }
+        if (W_press || S_press) {
+            vertical_isMove = true;
+        }
+        return;
+    }
 	magic_num--;
 	char str[10];
 	sprintf(str, "%d", magic_num);
