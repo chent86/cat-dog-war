@@ -1,6 +1,7 @@
 #include "chooseHero.h"
 #include "SimpleAudioEngine.h"
 #include "HelloWorldScene.h"
+#include "HelloWorldScene2.h"
 #include "MenuScene.h"
 
 USING_NS_CC;
@@ -48,7 +49,7 @@ bool chooseHero::init()
 	auto hero1 = MenuItemImage::create(
 											"hero_1.png",
 											"hero_11.png",
-											CC_CALLBACK_1(chooseHero::chooseHeroCallback, this));
+											CC_CALLBACK_1(chooseHero::chooseHeroCallback1, this));
 
 	hero1->setPosition(Vec2(visibleSize.width / 2 + origin.x + 200, visibleSize.height / 2 + origin.y));
 
@@ -59,7 +60,7 @@ bool chooseHero::init()
 	auto border1 = MenuItemImage::create(
 		"border.png",
 		"border.png",
-		CC_CALLBACK_1(chooseHero::chooseHeroCallback, this)       //点击英雄图片和英雄名字都会开始游戏
+		CC_CALLBACK_1(chooseHero::chooseHeroCallback1, this)       //点击英雄图片和英雄名字都会开始游戏
 	);
 	auto first_button = Menu::create(border1, NULL);
 	border1->setPosition(Vec2(border1->getPositionX()+200, border1->getPositionY() - 250));
@@ -73,7 +74,7 @@ bool chooseHero::init()
 	auto hero2 = MenuItemImage::create(
 											"hero_2.png",
 											"hero_21.png",
-											CC_CALLBACK_1(chooseHero::chooseHeroCallback, this));
+											CC_CALLBACK_1(chooseHero::chooseHeroCallback2, this));
 
 	hero2->setPosition(Vec2(visibleSize.width / 2 + origin.x - 200, visibleSize.height / 2 + origin.y));
 
@@ -86,7 +87,7 @@ bool chooseHero::init()
 	auto border2 = MenuItemImage::create(
 		"border.png",
 		"border.png",
-		CC_CALLBACK_1(chooseHero::chooseHeroCallback, this)       //点击英雄图片和英雄名字都会开始游戏
+		CC_CALLBACK_1(chooseHero::chooseHeroCallback2, this)       //点击英雄图片和英雄名字都会开始游戏
 	);
 	auto second_button = Menu::create(border2, NULL);
 	border2->setPosition(Vec2(border2->getPositionX() - 200, border2->getPositionY() - 250));
@@ -104,9 +105,14 @@ bool chooseHero::init()
 	return true;
 }
 
-void chooseHero::chooseHeroCallback(cocos2d::Ref* pSender) {
+void chooseHero::chooseHeroCallback1(cocos2d::Ref* pSender) {
 	auto scene = HelloWorld::createScene();
 	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
+}
+
+void chooseHero::chooseHeroCallback2(cocos2d::Ref* pSender) {
+    auto scene = HelloWorld2::createScene();
+    Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
 }
 
 void chooseHero::backCallback(cocos2d::Ref* pSender) {

@@ -10,7 +10,8 @@ public:
 	virtual bool init();
 
 	// a selector callback
-	void chooseHeroCallback(cocos2d::Ref* pSender);
+	void chooseHeroCallback1(cocos2d::Ref* pSender);
+    void chooseHeroCallback2(cocos2d::Ref* pSender);
 
 	void backCallback(cocos2d::Ref* pSender);
 	// implement the "static create()" method manually

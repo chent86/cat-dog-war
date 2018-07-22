@@ -72,10 +72,6 @@ bool HelloWorld::init()
 	sp0->setPosition(Vec2(origin.x + pT->getContentSize().width, origin.y + visibleSize.height - sp0->getContentSize().height));
 	addChild(sp0, 0);
 
-
-
-
-
 	auto frame0 = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
 
 	player = Sprite::create("hero_03_move_01.png");
