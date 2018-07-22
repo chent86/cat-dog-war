@@ -30,6 +30,7 @@ public:
     void meet();
     void update(float f);
 	void quit(cocos2d::Ref* pSender);
+	void save(cocos2d::Ref* pSender);
     void shock_wave_skill(cocos2d::Ref* pSender);
     Sprite* collider(Rect rect);
     void setMovekey();

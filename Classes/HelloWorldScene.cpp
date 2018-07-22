@@ -141,7 +141,8 @@ bool HelloWorld::init()
 	dtime = 0;
 
 	//»÷É±ÊýÁ¿
-	database->setIntegerForKey("killNum", 0);
+	if(database->getIntegerForKey("continue") == 0)
+		database->setIntegerForKey("killNum", 0);
 	attacknum = database->getIntegerForKey("killNum");
 	char str[10];
 	sprintf(str, "%d", attacknum);
@@ -187,8 +188,13 @@ bool HelloWorld::init()
 	back->setColor(Color3B(255, 255, 255));
 	auto back_item = MenuItemLabel::create(back, CC_CALLBACK_1(HelloWorld::quit, this));
 	back_item->setPosition(Vec2(visibleSize.width - 50, visibleSize.height - 30));
+
+	auto save = Label::createWithTTF("SAVE", "fonts/Marker Felt.ttf", 30);
+	save->setColor(Color3B(255, 255, 255));
+	auto save_item = MenuItemLabel::create(save, CC_CALLBACK_1(HelloWorld::save, this));
+	save_item->setPosition(Vec2(visibleSize.width - 150, visibleSize.height - 30));
 	
-	auto menu = Menu::create(back_item, NULL);
+	auto menu = Menu::create(back_item, save_item, NULL);
 	menu->setAnchorPoint(Vec2::ZERO);
 	menu->setPosition(Vec2::ZERO);
 	this->addChild(menu);
@@ -200,6 +206,11 @@ void HelloWorld::quit(cocos2d::Ref* pSender) {
 	auto scene = MenuScene::createScene();
 	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
 	
+}
+
+void HelloWorld::save(cocos2d::Ref* pSender) {
+	database->setIntegerForKey("killNum", attacknum);
+	database->setIntegerForKey("role", 0);
 }
 
 void HelloWorld::update(float f) {

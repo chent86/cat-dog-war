@@ -138,7 +138,8 @@ bool HelloWorld2::init() {
     dtime = 0;
 
     //»÷É±ÊýÁ¿
-    database->setIntegerForKey("killNum", 0);
+	if (database->getIntegerForKey("continue") == 0)
+		database->setIntegerForKey("killNum", 0);
     attacknum = database->getIntegerForKey("killNum");
     char str[10];
     sprintf(str, "%d", attacknum);
@@ -185,7 +186,12 @@ bool HelloWorld2::init() {
 	auto back_item = MenuItemLabel::create(back, CC_CALLBACK_1(HelloWorld2::quit, this));
 	back_item->setPosition(Vec2(visibleSize.width - 50, visibleSize.height - 30));
 
-	auto menu = Menu::create(back_item, NULL);
+	auto save = Label::createWithTTF("SAVE", "fonts/Marker Felt.ttf", 30);
+	save->setColor(Color3B(255, 255, 255));
+	auto save_item = MenuItemLabel::create(save, CC_CALLBACK_1(HelloWorld2::save, this));
+	save_item->setPosition(Vec2(visibleSize.width - 150, visibleSize.height - 30));
+
+	auto menu = Menu::create(back_item, save_item, NULL);
 	menu->setAnchorPoint(Vec2::ZERO);
 	menu->setPosition(Vec2::ZERO);
 	this->addChild(menu);
@@ -197,6 +203,11 @@ void HelloWorld2::quit(cocos2d::Ref* pSender) {
 	auto scene = MenuScene::createScene();
 	Director::getInstance()->replaceScene(TransitionFade::create(0.5, scene, Color3B(0, 0, 0)));
 
+}
+
+void HelloWorld2::save(cocos2d::Ref* pSender) {
+	database->setIntegerForKey("killNum", attacknum);
+	database->setIntegerForKey("role", 1);
 }
 
 void HelloWorld2::update(float f) {
@@ -318,14 +329,14 @@ void HelloWorld2::meet() {
         if (x < 0 || x > visibleSize.width) {
             bgLayer->removeChild(bullet);
             this->bullets.remove(bullet);
-            break;
+			break;
         }
     }
 
     auto enemys = m_factory->getMonster();
     for (auto bullet : bullets) {
         for (auto enemy : enemys) {
-            if (bullet->getPosition().getDistance(enemy->getPosition()) <= 30) {
+            if (bullet->getPosition().getDistance(enemy->getPosition()) <= 20) {
 				auto delayTime = DelayTime::create(0.01f);
 				auto func = CallFunc::create([this, enemy,bullet]()
 				{

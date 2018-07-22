@@ -31,6 +31,7 @@ public:
 	void stop();
 	void ifdead();
 	void quit(cocos2d::Ref* pSender);
+	void save(cocos2d::Ref* pSender);
 	void update(float f);
 	Sprite* collider(Rect rect);
 	void setMovekey();
