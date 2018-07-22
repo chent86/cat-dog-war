@@ -123,7 +123,7 @@ bool HelloWorld2::init() {
 
 	//地雷动画
 	mine.reserve(3);
-	for (int i = 1; i <= 4; i++) {
+	for (int i = 1; i <= 3; i++) {
 		char run_pic[25];
 		sprintf(run_pic, "explo_03_0%d.png", i);
 		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
@@ -325,7 +325,7 @@ void HelloWorld2::meet() {
     for (auto bullet : bullets) {
         for (auto enemy : enemys) {
             if (bullet->getPosition().getDistance(enemy->getPosition()) <= 30) {
-				auto delayTime = DelayTime::create(0.5f);
+				auto delayTime = DelayTime::create(0.01f);
 				auto func = CallFunc::create([this, enemy,bullet]()
 				{
 					int x = enemy->getPosition().x;
@@ -334,7 +334,7 @@ void HelloWorld2::meet() {
 					auto delayTime = DelayTime::create(0.8f);
 					auto func = CallFunc::create([this, x, y]()
 					{
-						int ran = random(1, 2);
+						int ran = random(1, 4);
 						if (ran == 1) {
 							auto blood = Sprite::create("blood.png");
 							blood->setPosition(Vec2(x, y + 15));
@@ -356,7 +356,6 @@ void HelloWorld2::meet() {
 					//移除怪物
 					fac->removeMonster(enemy);
 					//移除子弹
-					bullet->stopAllActions();
 					this->bgLayer->removeChild(bullet);
 					this->bullets.remove(bullet);
 					//增加击杀数并显示
@@ -396,7 +395,7 @@ void HelloWorld2::meet() {
         if (shock_wave != nullptr) {
             for (auto enemy : enemys) {
                 if (shock_wave->getPosition().getDistance(enemy->getPosition()) <= 40) {
-					auto delayTime = DelayTime::create(0.5f);
+					auto delayTime = DelayTime::create(0.01f);
 					auto func = CallFunc::create([this, enemy]()
 					{
 						int x = enemy->getPosition().x;
@@ -405,7 +404,7 @@ void HelloWorld2::meet() {
 						auto delayTime = DelayTime::create(0.8f);
 						auto func = CallFunc::create([this, x, y]()
 						{
-							int ran = random(1, 2);
+							int ran = random(1, 4);
 							if (ran == 1) {
 								auto blood = Sprite::create("blood.png");
 								blood->setPosition(Vec2(x, y + 15));
@@ -557,12 +556,6 @@ void HelloWorld2::updateTime(float data) {
 //通过调度器使怪物向player移动
 void HelloWorld2::Movetoplayer(float data) {
     if (bool_num) {
-		//auto m = fac->createMonster();
-		//auto moster_x = random(origin.x, visibleSize.width);
-		//auto moster_y = 100;
-		//bgLayer->addChild(m);
-		//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
-		//m->setPosition(Point);
 		for (auto i : fac->getMonster()) {
 			if (this->bgLayer->convertToWorldSpace(i->getPosition()).x < player->getPositionX())
 				i->setFlipX(true);
@@ -742,22 +735,13 @@ void HelloWorld2::throwBomb(Sprite* m, float time) {
 }
 
 void HelloWorld2::shock_wave_skill(cocos2d::Ref* pSender) {
-    //if (magic_num <= 0)
-    //    return;
-    //magic_num--;
-    //char str[10];
-    //sprintf(str, "%d", magic_num);
-    //magic_label->setString(str);
-
     // 不能同时存在多个冲击波
-	if (magic_num <= 0)
+	if (!bool_num||magic_num <= 0 || shock_wave != nullptr)
 		return;
 	magic_num--;
 	char str[10];
 	sprintf(str, "%d", magic_num);
 	magic_label->setString(str);
-    if (shock_wave != nullptr)
-        return;
     auto attack_animation = Animation::createWithSpriteFrames(skill, 0.1f);
     auto attack_animate = Animate::create(attack_animation);
     player->runAction(attack_animate);
