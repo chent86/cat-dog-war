@@ -9,9 +9,21 @@ USING_NS_CC;
 boolean bool_num = 1;
 int attacknum = 0;
 
+void HelloWorld::setPhysicsWorld(PhysicsWorld* world) { m_world = world; }
+
 Scene* HelloWorld::createScene()
 {
-	return HelloWorld::create();
+	auto scene = Scene::createWithPhysics();
+
+	scene->getPhysicsWorld()->setAutoStep(true);
+
+	// Debug 模式
+	// scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	scene->getPhysicsWorld()->setGravity(Vec2(0, -300.0f));
+	auto layer = HelloWorld::create();
+	layer->setPhysicsWorld(scene->getPhysicsWorld());
+	scene->addChild(layer);
+	return scene;
 }
 
 // Print useful error message instead of segfaulting when files are not there.
@@ -115,6 +127,15 @@ bool HelloWorld::init()
 		thunder.pushBack(frame);
 	}
 
+	//地雷动画
+	mine.reserve(3);
+	for (int i = 1; i <= 4; i++) {
+		char run_pic[25];
+		sprintf(run_pic, "explo_03_0%d.png", i);
+		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
+		mine.pushBack(frame);
+	}
+
 	//计时器
 	time = Label::createWithTTF("0", "fonts/arial.ttf", 36);
 	time->setPosition(Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height - 70));
@@ -135,6 +156,7 @@ bool HelloWorld::init()
 	schedule(schedule_selector(HelloWorld::Movetoplayer), 3);
 	schedule(schedule_selector(HelloWorld::hitByMonster), 0.5);
 	schedule(schedule_selector(HelloWorld::getDrug), 0.5);
+	schedule(schedule_selector(HelloWorld::getBomb), 0.5);
 	schedule(schedule_selector(HelloWorld::update), 0.05);
 
 	addKeyboardListener();
@@ -152,8 +174,10 @@ bool HelloWorld::init()
 
 	this->last_key = 'D';
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; i++) {
 		group[i] = false;
+		monster_bomb[i] = 3;
+	}
 
 	m_factory = Factory::getInstance();
 
@@ -190,6 +214,19 @@ void HelloWorld::update(float f) {
 				Vec2 Point = bgLayer->convertToNodeSpace(Vec2(400*i+ 700, moster_y));
 				//Vec2 Point = bgLayer->convertToWorldSpaceAR(Vec2(moster_x, moster_y));
 				m->setPosition(Point);
+				m->setTag(i);
+			}
+		}
+	}
+
+	for (auto i : fac->getMonster()) {
+		if (this->bgLayer->convertToWorldSpace(i->getPosition()).x - this->player->getPosition().x < 600) {
+			if (monster_bomb[i->getTag()] > 0) {
+				monster_bomb[i->getTag()]--;
+				if (i->getTag() == 0)
+					throwBomb(i, 1.9f);   //未知bug，第一波兵扔的炸弹高一点，所以要落久一点
+				else
+					throwBomb(i, 1.4f);
 			}
 		}
 	}
@@ -427,51 +464,59 @@ void HelloWorld::Movetoplayer(float data) {
 //player受伤
 void HelloWorld::Playerhurt() {
 	auto tag = pT->getPercentage();
-	if (tag == 100) {
-		auto progressTo = ProgressTo::create(2, 80);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 80) {
-		auto progressTo = ProgressTo::create(2, 60);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 60) {
-		auto progressTo = ProgressTo::create(2, 40);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 40) {
-		auto progressTo = ProgressTo::create(2, 20);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 20) {
-		auto progressTo = ProgressTo::create(2, 0);
-		pT->runAction(progressTo);
-	}
+	tag -= 20;
+	auto progressTo = ProgressTo::create(2, tag);
+	pT->runAction(progressTo);
+	//if (tag == 100) {
+	//	auto progressTo = ProgressTo::create(2, 80);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 80) {
+	//	auto progressTo = ProgressTo::create(2, 60);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 60) {
+	//	auto progressTo = ProgressTo::create(2, 40);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 40) {
+	//	auto progressTo = ProgressTo::create(2, 20);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 20) {
+	//	auto progressTo = ProgressTo::create(2, 0);
+	//	pT->runAction(progressTo);
+	//}
 }
 
 //player恢复
 void HelloWorld::Playerrecover() {
 	auto tag = pT->getPercentage();
-	if (tag == 0) {
-		auto progressTo = ProgressTo::create(2, 20);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 80) {
-		auto progressTo = ProgressTo::create(2, 100);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 60) {
-		auto progressTo = ProgressTo::create(2, 80);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 40) {
-		auto progressTo = ProgressTo::create(2, 60);
-		pT->runAction(progressTo);
-	}
-	else if (tag == 20) {
-		auto progressTo = ProgressTo::create(2, 40);
-		pT->runAction(progressTo);
-	}
+	tag += 20;
+	if (tag > 100)
+		tag = 100;
+	auto progressTo = ProgressTo::create(2, tag);
+	pT->runAction(progressTo);
+	//if (tag == 0) {
+	//	auto progressTo = ProgressTo::create(2, 20);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 80) {
+	//	auto progressTo = ProgressTo::create(2, 100);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 60) {
+	//	auto progressTo = ProgressTo::create(2, 80);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 40) {
+	//	auto progressTo = ProgressTo::create(2, 60);
+	//	pT->runAction(progressTo);
+	//}
+	//else if (tag == 20) {
+	//	auto progressTo = ProgressTo::create(2, 40);
+	//	pT->runAction(progressTo);
+	//}
 }
 
 //player受到到攻击
@@ -511,7 +556,6 @@ void HelloWorld::hitByMonster(float data) {
 void HelloWorld::getDrug(float data) {
 	if (bool_num) {
 		Rect playerRect = player->getBoundingBox();
-		Sprite* m_drug;
 		for (auto i : bloods) {
 			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
 			if (playerRect.containsPoint(ConvertPoint)) {
@@ -530,6 +574,44 @@ void HelloWorld::getDrug(float data) {
 				char str[10];
 				sprintf(str, "%d", magic_num);
 				magic_label->setString(str);
+				break;
+			}
+		}
+	}
+}
+
+void HelloWorld::getBomb(float data) {
+	if (bool_num) {
+		Rect playerRect = player->getBoundingBox();
+		for (auto i : bombs) {
+			Vec2 ConvertPoint = bgLayer->convertToWorldSpaceAR(i->getPosition());
+			if (playerRect.containsPoint(ConvertPoint)) {
+				auto mine_animation = Animation::createWithSpriteFrames(mine, 0.1f);
+				auto mine_animate = Animate::create(mine_animation);
+				i->runAction(mine_animate);
+				auto delayTime = DelayTime::create(0.4f);
+				auto func = CallFunc::create([this, i]()
+				{
+					bombs.eraseObject(i);
+					this->bgLayer->removeChild(i);
+					Playerhurt();
+					//受伤动画
+					auto hurt_animation = Animation::createWithSpriteFrames(hurt, 0.5f);
+					auto hurt_animate = Animate::create(hurt_animation);
+					player->runAction(hurt_animate);
+					isHurt = true;
+
+					auto delayTime = DelayTime::create(1.0f);
+					auto func = CallFunc::create([this]()
+					{
+						isHurt = false;
+						bool_num = 1;
+					});
+					auto seq = Sequence::create(delayTime, func, nullptr);
+					this->runAction(seq);
+				});
+				auto seq = Sequence::create(delayTime, func, nullptr);
+				this->runAction(seq);
 				break;
 			}
 		}
@@ -561,6 +643,28 @@ Sprite* HelloWorld::collider(Rect rect) {
 		}
 	}
 	return NULL;
+}
+
+void HelloWorld::throwBomb(Sprite* m, float time) {
+	auto bomb_sprite = Sprite::create("bomb.png");
+	bomb_sprite->setPosition(m->getPosition());
+	auto bomb_body = PhysicsBody::createCircle(bomb_sprite->getContentSize().width / 2, PhysicsMaterial(1, 1, 0));
+	bomb_body->setGravityEnable(true);
+	bomb_body->setCollisionBitmask(0x00);
+	bomb_sprite->setPhysicsBody(bomb_body);
+	this->bgLayer->addChild(bomb_sprite, 0);
+	bomb_sprite->getPhysicsBody()->setVelocity(Vec2(-200,200));
+	bombs.pushBack(bomb_sprite);
+	auto delayTime = DelayTime::create(time);
+	auto func = CallFunc::create([this, bomb_sprite, bomb_body]()
+	{
+		if (bombs.getIndex(bomb_sprite) >= 0) {
+			bomb_body->setGravityEnable(false);
+			bomb_body->setVelocity(Vec2(0, 0));
+		}
+	});
+	auto seq = Sequence::create(delayTime, func, nullptr);
+	this->runAction(seq);
 }
 
 void HelloWorld::thunder_skill() {

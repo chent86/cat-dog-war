@@ -23,7 +23,10 @@ public:
 	void Playerhurt();
 	void hitByMonster(float data);
 	void getDrug(float data);
-	void Playerrecover();    
+	void getBomb(float data);
+	void Playerrecover();
+	void throwBomb(Sprite* monster, float time);
+	void setPhysicsWorld(PhysicsWorld * world);
 	void move();
 	void stop();
 	void ifdead();
@@ -40,6 +43,7 @@ private:
 	cocos2d::Vector<SpriteFrame*> run;
 	cocos2d::Vector<SpriteFrame*> hurt;
 	cocos2d::Vector<SpriteFrame*> thunder;
+	cocos2d::Vector<SpriteFrame*> mine;
 	cocos2d::Size visibleSize;
 	cocos2d::Vec2 origin;
 	cocos2d::Label* time;
@@ -47,6 +51,7 @@ private:
 	cocos2d::Sprite* bg;
 	Vector<Sprite*> bloods;
 	Vector<Sprite*> magics;
+	Vector<Sprite*> bombs;
 	char movekey;
 	char vertical_movekey;
 	bool isMove;
@@ -65,5 +70,7 @@ private:
 	void addKeyboardListener();
 	char last_key;  //上一次水平移动是左还是右，用于对玩家图片的翻转
 	bool group[4];
+	int monster_bomb[4];
 	Factory* m_factory;
+	PhysicsWorld* m_world;
 };
