@@ -33,6 +33,7 @@ bool HelloWorld::init()
 
 	visibleSize = Director::getInstance()->getVisibleSize();
 	origin = Director::getInstance()->getVisibleOrigin();
+    movekey = 'D';
 
 	//hp条
 	Sprite* sp0 = Sprite::create("hp.png", CC_RECT_PIXELS_TO_POINTS(Rect(0, 320, 420, 47)));
@@ -52,56 +53,106 @@ bool HelloWorld::init()
 	sp0->setPosition(Vec2(origin.x + pT->getContentSize().width, origin.y + visibleSize.height - sp0->getContentSize().height));
 	addChild(sp0, 0);
 
-	auto frame0 = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
+    //英雄类型
+    std::string heroType = database->getStringForKey("heroType");
 
-	player = Sprite::create("hero_03_move_01.png");
-	player->setPosition(Vec2(origin.x + visibleSize.width / 4, origin.y + 100));
-	this->addChild(player, 2);
+    if (heroType == "near") {
+        auto frame0 = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
 
-	// 攻击动画
-	attack.reserve(4);
-	for (int i = 1; i <= 4; i++) {
-		char attack_pic[25];
-		sprintf(attack_pic, "hero_03_attack_0%d.png", i);
-		SpriteFrame* frame = SpriteFrame::create(attack_pic, Rect(0, 0, 213, 170));
-		attack.pushBack(frame);
-		if (i == 4) attack.pushBack(frame0);
-	}
-	
-	//死亡动画
-	dead.reserve(4);
-	for (int i = 1; i < 4; i++) {
-		char dead_pic[25];
-		sprintf(dead_pic, "explo_01_0%d.png", i);
-		SpriteFrame* frame = SpriteFrame::create(dead_pic, Rect(0, 0, 120, 120));
-		dead.pushBack(frame);
-	}
-	SpriteFrame* dead_frame = SpriteFrame::create("ghost_dog.png", Rect(0, 0, 70, 100));
-	dead.pushBack(dead_frame);
+        player = Sprite::create("hero_03_move_01.png");
+        player->setPosition(Vec2(origin.x + visibleSize.width / 4, origin.y + 100));
+        this->addChild(player, 2);
 
-	//移动动画
-	run.reserve(2);
-	for (int i = 1; i <= 2; i++) {
-		char run_pic[25];
-		sprintf(run_pic, "hero_03_move_0%d.png", i);
-		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 170));
-		run.pushBack(frame);
-	}
+        // 攻击动画
+        attack.reserve(4);
+        for (int i = 1; i <= 4; i++) {
+            char attack_pic[25];
+            sprintf(attack_pic, "hero_03_attack_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(attack_pic, Rect(0, 0, 213, 170));
+            attack.pushBack(frame);
+            if (i == 4) attack.pushBack(frame0);
+        }
 
-	//被攻击动画
-	hurt.reserve(2);
-	SpriteFrame* hurt_frame = SpriteFrame::create("hero_03_damage_01.png", Rect(0, 0, 213, 170));
-	hurt.pushBack(hurt_frame);
-	hurt.pushBack(frame0);
+        //死亡动画
+        dead.reserve(4);
+        for (int i = 1; i < 4; i++) {
+            char dead_pic[25];
+            sprintf(dead_pic, "explo_01_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(dead_pic, Rect(0, 0, 120, 120));
+            dead.pushBack(frame);
+        }
+        SpriteFrame* dead_frame = SpriteFrame::create("ghost_dog.png", Rect(0, 0, 70, 100));
+        dead.pushBack(dead_frame);
 
-	//闪电动画
-	thunder.reserve(4);
-	for (int i = 1; i <= 4; i++) {
-		char run_pic[25];
-		sprintf(run_pic, "thunder_beam_0%d.png", i);
-		SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
-		thunder.pushBack(frame);
-	}
+        //移动动画
+        run.reserve(2);
+        for (int i = 1; i <= 2; i++) {
+            char run_pic[25];
+            sprintf(run_pic, "hero_03_move_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 170));
+            run.pushBack(frame);
+        }
+
+        //被攻击动画
+        hurt.reserve(2);
+        SpriteFrame* hurt_frame = SpriteFrame::create("hero_03_damage_01.png", Rect(0, 0, 213, 170));
+        hurt.pushBack(hurt_frame);
+        hurt.pushBack(frame0);
+
+        //闪电动画
+        thunder.reserve(4);
+        for (int i = 1; i <= 4; i++) {
+            char run_pic[25];
+            sprintf(run_pic, "thunder_beam_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 213, 400));
+            thunder.pushBack(frame);
+        }
+    }
+    else {
+        auto frame0 = SpriteFrame::create("hero_07_move_01.png", Rect(0, 0, 102, 130));
+
+        player = Sprite::create("hero_07_move_01.png");
+        player->setPosition(Vec2(origin.x + visibleSize.width / 4, origin.y + 100));
+        this->addChild(player, 2);
+
+        // 攻击动画
+        attack.reserve(4);
+        for (int i = 1; i <= 4; i++) {
+            char attack_pic[25];
+            sprintf(attack_pic, "hero_07_attack_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(attack_pic, Rect(0, 0, 120, 130));
+            attack.pushBack(frame);
+            if (i == 4) attack.pushBack(frame0);
+        }
+
+        //死亡动画
+        dead.reserve(4);
+        for (int i = 1; i < 4; i++) {
+            char dead_pic[25];
+            sprintf(dead_pic, "explo_01_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(dead_pic, Rect(0, 0, 120, 120));
+            dead.pushBack(frame);
+        }
+        SpriteFrame* dead_frame = SpriteFrame::create("ghost_dog.png", Rect(0, 0, 70, 100));
+        dead.pushBack(dead_frame);
+
+        //移动动画
+        run.reserve(2);
+        for (int i = 1; i <= 2; i++) {
+            char run_pic[25];
+            sprintf(run_pic, "hero_07_move_0%d.png", i);
+            SpriteFrame* frame = SpriteFrame::create(run_pic, Rect(0, 0, 102, 130));
+            run.pushBack(frame);
+        }
+
+        //被攻击动画
+        hurt.reserve(2);
+        SpriteFrame* hurt_frame = SpriteFrame::create("hero_07_damage_01.png", Rect(0, 0, 120, 130));
+        hurt.pushBack(hurt_frame);
+        hurt.pushBack(frame0);
+    }
+
+
 
 	//计时器
 	time = Label::createWithTTF("0", "fonts/arial.ttf", 36);
@@ -191,6 +242,7 @@ void HelloWorld::update(float f) {
 		this->addChild(win_word, 0);
 	}
 
+    meet();
 }
 
 //键盘监听
@@ -210,10 +262,6 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 		auto attack_animate = Animate::create(attack_animation);
 		player->runAction(attack_animate);
 
-		auto thunder_animation = Animation::createWithSpriteFrames(thunder, 0.1f);
-		auto thunder_animate = Animate::create(thunder_animation);
-		player->runAction(thunder_animate);
-
 		auto delayTime = DelayTime::create(0.4f);
 		auto func = CallFunc::create([this]()
 		{
@@ -227,60 +275,109 @@ void HelloWorld::attackCallback(cocos2d::Ref* pSender) {
 				vertical_isMove = true;
 			}
 			setMovekey();
+            if (database->getStringForKey("heroType") == "far")
+                this->farfire();
 		});
 		auto seq = Sequence::create(delayTime, func, nullptr);
 		this->runAction(seq);
 
-		//判断范围内是否有怪物
-		Rect playerRect = player->getBoundingBox();
-		Rect attackRect = Rect(playerRect.getMinX() - 40, playerRect.getMinY(),
-			playerRect.getMaxX() - playerRect.getMinX() + 80,
-			playerRect.getMaxY() - playerRect.getMinY());
 
-		Sprite* collision = HelloWorld::collider(attackRect);
-		if (collision != NULL) {
-			auto x = collision->getPosition().x;
-			auto y = collision->getPosition().y;
+        if (database->getStringForKey("heroType") == "near") {
+		    //判断范围内是否有怪物
+		    Rect playerRect = player->getBoundingBox();
+		    Rect attackRect = Rect(playerRect.getMinX() - 40, playerRect.getMinY(),
+			    playerRect.getMaxX() - playerRect.getMinX() + 80,
+			    playerRect.getMaxY() - playerRect.getMinY());
 
-			//怪物动作结束后掉血瓶
-			auto delayTime = DelayTime::create(0.8f);
-			auto func = CallFunc::create([this, x, y]()
-			{
-				int ran = random(1, 2);
-				if (ran == 1) {
-					auto blood = Sprite::create("blood.png");
-					blood->setPosition(Vec2(x, y + 15));
-					bloods.pushBack(blood);
-					blood->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
-					bgLayer->addChild(blood);
-				}
-				else if (ran == 2) {
-					auto magic = Sprite::create("magic.png");
-					magic->setPosition(Vec2(x, y + 15));
-					magics.pushBack(magic);
-					magic->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
-					bgLayer->addChild(magic);
-				}
-			});
-			auto seq = Sequence::create(delayTime, func, nullptr);
-			this->runAction(seq);
+		    Sprite* collision = HelloWorld::collider(attackRect);
+            if (collision != NULL) {
+                auto x = collision->getPosition().x;
+                auto y = collision->getPosition().y;
 
-			//移除怪物
-			fac->removeMonster(collision);
+                //怪物动作结束后掉血瓶
+                auto delayTime = DelayTime::create(0.8f);
+                auto func = CallFunc::create([this, x, y]()
+                {
+                    int ran = random(1, 2);
+                    if (ran == 1) {
+                        auto blood = Sprite::create("blood.png");
+                        blood->setPosition(Vec2(x, y + 15));
+                        bloods.pushBack(blood);
+                        blood->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+                        bgLayer->addChild(blood);
+                    }
+                    else if (ran == 2) {
+                        auto magic = Sprite::create("magic.png");
+                        magic->setPosition(Vec2(x, y + 15));
+                        magics.pushBack(magic);
+                        magic->runAction(MoveBy::create(0.1f, Vec2(0, -20)));
+                        bgLayer->addChild(magic);
+                    }
+                });
+                auto seq = Sequence::create(delayTime, func, nullptr);
+                this->runAction(seq);
 
-			//增加击杀数并显示
-			attacknum++;
-			database->setIntegerForKey("killNum", attacknum);
-			database->flush();
-			int i = database->getIntegerForKey("killNum");
-			log("%d", i);
+                //移除怪物
+                fac->removeMonster(collision);
 
-			char str[10];
-			sprintf(str, "%d", i);
-			killnum->setString(str);
-		}
+                //增加击杀数并显示
+                attacknum++;
+                database->setIntegerForKey("killNum", attacknum);
+                database->flush();
+                int i = database->getIntegerForKey("killNum");
+                log("%d", i);
+
+                char str[10];
+                sprintf(str, "%d", i);
+                killnum->setString(str);
+            }
+        }
 	}
 
+}
+
+// 查拉普攻
+void HelloWorld::farfire() {
+    auto bullet = Sprite::create("projectile_19_01.png");
+    if (movekey == 'D')
+        bullet->setFlipX(true);
+    bullet->setAnchorPoint(Vec2(0.5, 0.5));
+    bullets.push_back(bullet);
+    bullet->setPosition(bgLayer->convertToNodeSpace(player->getPosition()));
+    bgLayer->addChild(bullet, 1);
+}
+
+// 自定义碰撞事件
+void HelloWorld::meet() {
+    // 判断子弹是否打中陨石并执行对应操作
+    for (auto bullet : bullets) {
+        if (bullet->isFlippedX()) {
+            auto actionMove = MoveTo::create(0.05, Vec2(bullet->getPositionX() + 20, bullet->getPositionY()));
+            bullet->runAction(actionMove);
+        }
+        else {
+            auto actionMove = MoveTo::create(0.05, Vec2(bullet->getPositionX() - 20, bullet->getPositionY()));
+            bullet->runAction(actionMove);
+        }
+        auto x = bgLayer->convertToWorldSpace(bullet->getPosition()).x;
+        if (x < 0 || x > visibleSize.width) {
+            bgLayer->removeChild(bullet);
+            this->bullets.remove(bullet);
+        }
+    }
+
+    auto enemys = m_factory->getMonster();
+    for (auto bullet : bullets) {
+        for (auto enemy : enemys) {
+            if (bullet->getPosition().getDistance(enemy->getPosition()) <= 30) {
+                this->m_factory->removeMonster(enemy);
+                bullet->stopAllActions();
+                this->bgLayer->removeChild(bullet);
+                this->bullets.remove(bullet);
+                break;
+            }
+        }
+    }
 }
 
 //通过update调度器移动player
@@ -369,8 +466,14 @@ void HelloWorld::stop() {
 	auto x = player->getPosition().x;
 	auto y = player->getPosition().y;
 	this->removeChild(player);
-	auto frame = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
-	player = Sprite::createWithSpriteFrame(frame);
+    if (database->getStringForKey("heroType") == "near") {
+        auto frame = SpriteFrame::create("hero_03_move_01.png", Rect(0, 0, 213, 170));
+        player = Sprite::createWithSpriteFrame(frame);
+    }
+    else {
+        auto frame = SpriteFrame::create("hero_07_move_01.png", Rect(0, 0, 102, 130));
+        player = Sprite::createWithSpriteFrame(frame);
+    }
 	player->setPosition(Vec2(x, y));
 	if (this->last_key == 'A')
 		player->setFlipX(true);

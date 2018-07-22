@@ -1,8 +1,9 @@
 #pragma once
 #include "cocos2d.h"
 #include "Monster.h"
+#include "SimpleAudioEngine.h"
 using namespace cocos2d;
-
+using namespace std;
 class HelloWorld : public cocos2d::Scene
 {
 public:
@@ -26,6 +27,8 @@ public:
 	void move();
 	void stop();
 	void ifdead();
+    void farfire();
+    void meet();
 	void update(float f);
 	Sprite* collider(Rect rect);
 	void setMovekey();
@@ -33,6 +36,7 @@ public:
     CREATE_FUNC(HelloWorld);
 private:
 	cocos2d::Sprite* player;
+    list<Sprite*> bullets;
 	cocos2d::Vector<SpriteFrame*> attack;
 	cocos2d::Vector<SpriteFrame*> dead;
 	cocos2d::Vector<SpriteFrame*> run;
@@ -53,8 +57,8 @@ private:
 	bool S_press;
 	bool D_press;
 	bool W_press;
-	bool isAttack;//ÊÇ·ñ¹¥»÷
-	bool isHurt; //ÊÇ·ñ±»¹¥»÷
+	bool isAttack; //ÊÇ·ñ¹¥»÷
+	bool isHurt;   //ÊÇ·ñ±»¹¥»÷
 	cocos2d::ProgressTimer* pT;
 	cocos2d::Label* killnum;
 	cocos2d::Layer* bgLayer;
